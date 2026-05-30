@@ -331,4 +331,10 @@
 
     function playSong(url, title, artist) {
       const player = document.getElementById('audio-player');
-      document.getElementById('now-playing').innerText = `Now Playing:
+      document.getElementById('now-playing').innerText = `Now Playing: ${title} by ${artist}`;
+      player.src = url;
+      player.play();
+    }
+  </script>
+</body>
+</html>
