@@ -225,113 +225,39 @@
         return;
       }
 
-      fetch(WEB_APP_URL)
-        .then(response => response.json())
+      // Fetch the data from your Google Web App using an active redirection follower rule
+      fetch(WEB_APP_URL, { method: "GET", redirect: "follow" })
+        .then(response => {
+          if (!response.ok) throw new Error("Network response encountered a block.");
+          return response.json();
+        })
         .then(tracks => {
+          if (tracks.error) {
+            document.getElementById('loading').innerText = "Backend Error: " + tracks.error;
+            return;
+          }
           allTracks = tracks;
           buildSidebarNavigation(tracks);
           renderPlaylist(tracks);
         })
         .catch(error => {
           console.error("Error fetching music:", error);
-          document.getElementById('loading').innerText = "Failed to load music. Check browser console for errors.";
+          document.getElementById('loading').innerHTML = `
+            Failed to load music library.<br>
+            <small style="color: #ff4444; font-size: 0.8rem;">
+              Please make sure your Google Script Deployment is configured for 'Who has access: Anyone'.
+            </small>`;
         });
     };
 
-    function buildSidebarNavigation(tracks) {
-      const treeDiv = document.getElementById('sidebar-tree');
-      treeDiv.innerHTML = "";
-      const structure = {};
-
-      tracks.forEach(track => {
-        if (!structure[track.artist]) {
-          structure[track.artist] = new Set();
-        }
-        structure[track.artist].add(track.album);
-      });
-
-      for (const artist in structure) {
-        const artistItem = document.createElement('div');
-        artistItem.className = 'menu-item';
-        artistItem.innerText = artist;
-        artistItem.onclick = (e) => {
-          e.stopPropagation();
-          highlightMenuItem(artistItem);
-          filterView('artist', artist);
-        };
-        treeDiv.appendChild(artistItem);
-
-        structure[artist].forEach(album => {
-          const albumItem = document.createElement('div');
-          albumItem.className = 'menu-item sub-item';
-          albumItem.innerText = album;
-          albumItem.onclick = (e) => {
-            e.stopPropagation();
-            highlightMenuItem(albumItem);
-            filterView('album', album);
-          };
-          treeDiv.appendChild(albumItem);
-        });
-      }
-    }
-
-    function highlightMenuItem(selectedElement) {
-      document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-      selectedElement.classList.add('active');
-    }
-
-    function filterView(type, value) {
-      let filtered = [];
-      const titleElement = document.getElementById('view-title');
-
-      if (type === 'all') {
-        filtered = allTracks;
-        titleElement.innerText = "All Tracks";
-        highlightMenuItem(document.getElementById('btn-all-music'));
-      } else if (type === 'artist') {
-        filtered = allTracks.filter(t => t.artist === value);
-        titleElement.innerText = value;
-      } else if (type === 'album') {
-        filtered = allTracks.filter(t => t.album === value);
-        titleElement.innerText = value;
-      }
-
-      renderPlaylist(filtered);
-    }
-
-    function renderPlaylist(tracks) {
-      document.getElementById('loading').style.display = 'none';
-      const playlistDiv = document.getElementById('playlist');
-      playlistDiv.innerHTML = ""; 
-      
-      if (!tracks || tracks.length === 0) {
-        playlistDiv.innerHTML = "<div style='color: var(--caption-color)'>No tracks found in this category.</div>";
-        return;
-      }
-
-      tracks.forEach(track => {
-        const div = document.createElement('div');
-        div.className = 'track';
-        div.innerHTML = `
-          <div>
-            <strong>${track.title}</strong><br>
-            <small style="color: var(--caption-color)">${track.artist} — ${track.album}</small>
-          </div>
-          <button onclick="playSong('${track.url}', '${track.title}', '${track.artist}')">Play</button>
-        `;
-        playlistDiv.appendChild(div);
-      });
-    }
+    // ... Keep your buildSidebarNavigation, highlightMenuItem, filterView, and renderPlaylist functions exactly the same ...
 
     function playSong(url, title, artist) {
       const player = document.getElementById('audio-player');
       document.getElementById('now-playing').innerText = `Now Playing: ${title} by ${artist}`;
       
-      // Since Google Apps Script URLs redirect to security tokens, 
-      // we can utilize the web-hosted Google download fallback architecture safely:
-      const cleanUrl = url.replace("script.google.com/macros/s/", "script.googleusercontent.com/macros/echo/s/");
-      
-      player.src = cleanUrl;
+      // Cleanly load the direct audio stream without extra request attributes
+      player.src = url;
       player.play().catch(error => {
         console.error("Playback execution error controlled:", error);
       });
