@@ -188,21 +188,20 @@
 
     <div class="menu-section">
       <h4>Artists & Albums</h4>
-      <div id="sidebar-tree">
-        </div>
+      <div id="sidebar-tree"></div>
     </div>
   </div>
 
   <div id="main-content">
     <h2 id="view-title">All Tracks</h2>
-    <div id="loading">Connecting to Google Drive and scanning folders. This will take many minues... </div>
+    <div id="loading">Connecting to Google Drive and scanning folders. This will take many minutes... </div>
     <div id="playlist"></div>
   </div>
 
   <div id="bottom-dock">
     <div id="player-container">
       <h3 id="now-playing">Select a song</h3>
-      <audio id="audio-player" controls></audio>
+      <audio id="audio-player" controls crossorigin="anonymous"></audio>
     </div>
 
     <footer>
@@ -214,22 +213,18 @@
   </div>
 
   <script>
-    // ⚠️ CRITICAL: Paste your Google Apps Script Web App URL between the quotes below!
     const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzadziBRFAFfKVZ641fat5aM2lNAyxyI6BLmaL3ifVcBpuhbwTmht_ND7lSI7dWRDsNUg/exec";
 
-    let allTracks = []; // Master structural file dataset
+    let allTracks = []; 
 
     window.onload = function() {
-      // Set the copyright year automatically on load
       document.getElementById("year").textContent = new Date().getFullYear();
 
-      // Flexible check to see if URL is empty or still a placeholder
       if (WEB_APP_URL === "" || WEB_APP_URL.includes("PASTE_YOUR_DEPLOYED")) {
         document.getElementById('loading').innerText = "Error: You forgot to paste your Web App URL into the HTML file!";
         return;
       }
 
-      // Fetch the data from your Google Web App across the internet
       fetch(WEB_APP_URL)
         .then(response => response.json())
         .then(tracks => {
@@ -243,9 +238,9 @@
         });
     };
 
-    // Parse the data engine into multi-tiered navigation elements
     function buildSidebarNavigation(tracks) {
       const treeDiv = document.getElementById('sidebar-tree');
+      treeDiv.innerHTML = "";
       const structure = {};
 
       tracks.forEach(track => {
@@ -285,7 +280,6 @@
       selectedElement.classList.add('active');
     }
 
-    // Interactive filter processing engine
     function filterView(type, value) {
       let filtered = [];
       const titleElement = document.getElementById('view-title');
@@ -332,8 +326,18 @@
     function playSong(url, title, artist) {
       const player = document.getElementById('audio-player');
       document.getElementById('now-playing').innerText = `Now Playing: ${title} by ${artist}`;
+      
+      // Reset the source element state cleanly to avoid pipeline streaming lockups
+      player.removeAttribute('src');
+      player.load();
+      
       player.src = url;
-      player.play();
+      player.load(); // Forces browser audio parser engines to completely refresh cache
+      
+      // Play and handle any underlying browser auto-play thread blocks safely
+      player.play().catch(error => {
+        console.error("Playback execution error controlled:", error);
+      });
     }
   </script>
 </body>
