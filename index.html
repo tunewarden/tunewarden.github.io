@@ -201,7 +201,7 @@
   <div id="bottom-dock">
     <div id="player-container">
       <h3 id="now-playing">Select a song</h3>
-      <audio id="audio-player" controls crossorigin="anonymous"></audio>
+      <audio id="audio-player" controls></audio>
     </div>
 
     <footer>
@@ -324,21 +324,14 @@
     }
 
     function playSong(url, title, artist) {
-      const player = document.getElementById('audio-player');
-      document.getElementById('now-playing').innerText = `Now Playing: ${title} by ${artist}`;
-      
-      // Reset the source element state cleanly to avoid pipeline streaming lockups
-      player.removeAttribute('src');
-      player.load();
-      
-      player.src = url;
-      player.load(); // Forces browser audio parser engines to completely refresh cache
-      
-      // Play and handle any underlying browser auto-play thread blocks safely
-      player.play().catch(error => {
-        console.error("Playback execution error controlled:", error);
-      });
-    }
-  </script>
+  const player = document.getElementById('audio-player');
+  document.getElementById('now-playing').innerText = `Now Playing: ${title} by ${artist}`;
+
+  // Cleanly swap the track without requesting cross-origin credentials
+  player.src = url;
+  player.play().catch(error => {
+    console.error("Playback execution error controlled:", error);
+  });
+}
 </body>
 </html>
