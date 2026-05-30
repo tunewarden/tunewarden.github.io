@@ -324,15 +324,18 @@
     }
 
     function playSong(url, title, artist) {
-  const player = document.getElementById('audio-player');
-  document.getElementById('now-playing').innerText = `Now Playing: ${title} by ${artist}`;
-
-  // Cleanly swap the track without requesting cross-origin credentials
-  player.src = url;
-  player.play().catch(error => {
-    console.error("Playback execution error controlled:", error);
-  });
-}
+      const player = document.getElementById('audio-player');
+      document.getElementById('now-playing').innerText = `Now Playing: ${title} by ${artist}`;
+      
+      // Since Google Apps Script URLs redirect to security tokens, 
+      // we can utilize the web-hosted Google download fallback architecture safely:
+      const cleanUrl = url.replace("script.google.com/macros/s/", "script.googleusercontent.com/macros/echo/s/");
+      
+      player.src = cleanUrl;
+      player.play().catch(error => {
+        console.error("Playback execution error controlled:", error);
+      });
+    }
   </script>    
 </body>
 </html>
