@@ -55,7 +55,7 @@
       color: var(--accent2); 
     }
     
-    /* Navigation Navigation Menu */
+    /* Navigation Menu */
     .menu-section {
       margin-bottom: 25px;
     }
@@ -133,7 +133,7 @@
       background: #1ed760; 
     }
 
-    /* Sticky Bottom Container (Holds Player AND Copyright Below It) */
+    /* Sticky Bottom Container */
     #bottom-dock {
       position: fixed; 
       bottom: 0; 
@@ -156,7 +156,7 @@
       width: 100%; 
     }
 
-    /* Footer / Copyright Styling at the absolute bottom */
+    /* Footer / Copyright Styling */
     footer {
       background: #121212;
       padding: 15px 20px;
@@ -218,6 +218,7 @@
     let allTracks = []; 
 
     window.onload = function() {
+      // Set the copyright year automatically on load
       document.getElementById("year").textContent = new Date().getFullYear();
 
       if (WEB_APP_URL === "" || WEB_APP_URL.includes("PASTE_YOUR_DEPLOYED")) {
@@ -225,7 +226,7 @@
         return;
       }
 
-      // Fetch the data from your Google Web App using an active redirection follower rule
+      // Fetch data using redirect tracking configuration rules
       fetch(WEB_APP_URL, { method: "GET", redirect: "follow" })
         .then(response => {
           if (!response.ok) throw new Error("Network response encountered a block.");
@@ -250,18 +251,102 @@
         });
     };
 
-    // ... Keep your buildSidebarNavigation, highlightMenuItem, filterView, and renderPlaylist functions exactly the same ...
+    // Restored Sidebar UI generator
+    function buildSidebarNavigation(tracks) {
+      const treeDiv = document.getElementById('sidebar-tree');
+      treeDiv.innerHTML = "";
+      const structure = {};
+
+      tracks.forEach(track => {
+        if (!structure[track.artist]) {
+          structure[track.artist] = new Set();
+        }
+        structure[track.artist].add(track.album);
+      });
+
+      for (const artist in structure) {
+        const artistItem = document.createElement('div');
+        artistItem.className = 'menu-item';
+        artistItem.innerText = artist;
+        artistItem.onclick = (e) => {
+          e.stopPropagation();
+          highlightMenuItem(artistItem);
+          filterView('artist', artist);
+        };
+        treeDiv.appendChild(artistItem);
+
+        structure[artist].forEach(album => {
+          const albumItem = document.createElement('div');
+          albumItem.className = 'menu-item sub-item';
+          albumItem.innerText = album;
+          albumItem.onclick = (e) => {
+            e.stopPropagation();
+            highlightMenuItem(albumItem);
+            filterView('album', album);
+          };
+          treeDiv.appendChild(albumItem);
+        });
+      }
+    }
+
+    function highlightMenuItem(selectedElement) {
+      document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+      selectedElement.classList.add('active');
+    }
+
+    // Interactive filter selector processing logic
+    function filterView(type, value) {
+      let filtered = [];
+      const titleElement = document.getElementById('view-title');
+
+      if (type === 'all') {
+        filtered = allTracks;
+        titleElement.innerText = "All Tracks";
+        highlightMenuItem(document.getElementById('btn-all-music'));
+      } else if (type === 'artist') {
+        filtered = allTracks.filter(t => t.artist === value);
+        titleElement.innerText = value;
+      } else if (type === 'album') {
+        filtered = allTracks.filter(t => t.album === value);
+        titleElement.innerText = value;
+      }
+
+      renderPlaylist(filtered);
+    }
+
+    function renderPlaylist(tracks) {
+      document.getElementById('loading').style.display = 'none';
+      const playlistDiv = document.getElementById('playlist');
+      playlistDiv.innerHTML = ""; 
+      
+      if (!tracks || tracks.length === 0) {
+        playlistDiv.innerHTML = "<div style='color: var(--caption-color)'>No tracks found in this category.</div>";
+        return;
+      }
+
+      tracks.forEach(track => {
+        const div = document.createElement('div');
+        div.className = 'track';
+        div.innerHTML = `
+          <div>
+            <strong>${track.title}</strong><br>
+            <small style="color: var(--caption-color)">${track.artist} — ${track.album}</small>
+          </div>
+          <button onclick="playSong('${track.url}', '${track.title}', '${track.artist}')">Play</button>
+        `;
+        playlistDiv.appendChild(div);
+      });
+    }
 
     function playSong(url, title, artist) {
       const player = document.getElementById('audio-player');
       document.getElementById('now-playing').innerText = `Now Playing: ${title} by ${artist}`;
       
-      // Cleanly load the direct audio stream without extra request attributes
       player.src = url;
       player.play().catch(error => {
         console.error("Playback execution error controlled:", error);
       });
     }
-  </script>    
+  </script>
 </body>
 </html>
