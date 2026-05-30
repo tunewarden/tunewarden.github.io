@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TUNEWARDEN</title>
+  <link rel="icon" href="/assets/favicon.png" type="image/png">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+
+  <style>
+    /* Color Variables */
+    :root {
+      --accent: #1DB954;   /* Spotify Green */
+      --accent2: #ffffff;  /* White */
+      --caption-color: #888888; /* Muted Grey */
+      --bg-sidebar: #121212;
+      --bg-main: #181818;
+      --bg-track: #242424;
+    }
+
+    body { 
+      font-family: Arial, sans-serif; 
+      background: var(--bg-main); 
+      color: white; 
+      margin: 0;
+      padding: 0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Left Sidebar Styling */
+    #sidebar {
+      width: 260px;
+      background: var(--bg-sidebar);
+      padding: 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #282828;
+      overflow-y: auto;
+    }
+
+    /* Logo Styling */
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 30px;
+    }
+    .logo span { 
+      color: var(--accent2); 
+    }
+    
+    /* Navigation Navigation Menu */
+    .menu-section {
+      margin-bottom: 25px;
+    }
+    .menu-section h4 {
+      color: var(--caption-color);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.1em;
+      margin-bottom: 10px;
+      padding-left: 5px;
+    }
+    .menu-item {
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: #b3b3b3;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .menu-item:hover, .menu-item.active {
+      color: white;
+      background: #282828;
+    }
+    .menu-item.active {
+      border-left: 3px solid var(--accent);
+      padding-left: 9px;
+    }
+    .sub-item {
+      padding-left: 25px;
+      font-size: 0.85rem;
+    }
+
+    /* Main Content Pane */
+    #main-content {
+      flex: 1;
+      padding: 30px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      padding-bottom: 240px; /* Space for the stacked bottom player dock */
+    }
+
+    #view-title {
+      margin-top: 0;
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    /* Playlist & Tracks */
+    .track { 
+      background: var(--bg-track); 
+      padding: 12px 20px; 
+      margin: 8px 0; 
+      border-radius: 6px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      transition: background 0.2s;
+    }
+    .track:hover {
+      background: #2e2e2e;
+    }
+    button { 
+      background: #1DB954; 
+      border: none; 
+      color: white; 
+      padding: 8px 16px; 
+      border-radius: 20px; 
+      cursor: pointer; 
+      font-weight: bold;
+    }
+    button:hover { 
+      background: #1ed760; 
+    }
+
+    /* Sticky Bottom Container (Holds Player AND Copyright Below It) */
+    #bottom-dock {
+      position: fixed; 
+      bottom: 0; 
+      left: 0; 
+      width: 100%; 
+      background: #181818; 
+      box-sizing: border-box; 
+      border-top: 2px solid #1DB954; 
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Music Player Container */
+    #player-container { 
+      background: #282828; 
+      padding: 20px; 
+    }
+    audio { 
+      width: 100%; 
+    }
+
+    /* Footer / Copyright Styling at the absolute bottom */
+    footer {
+      background: #121212;
+      padding: 15px 20px;
+      text-align: center;
+      border-top: 1px solid #282828;
+    }
+    figcaption {
+      color: var(--caption-color);
+      font-size: 0.85rem;
+    }
+    figcaption a {
+      color: var(--accent);
+      text-decoration: none;
+      margin-left: 5px;
+    }
+    figcaption a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar">
+    <div class="logo">TUNE<span>WARDEN</span></div>
+    
+    <div class="menu-section">
+      <div class="menu-item active" id="btn-all-music" onclick="filterView('all')">All Music</div>
+    </div>
+
+    <div class="menu-section">
+      <h4>Artists & Albums</h4>
+      <div id="sidebar-tree">
+        </div>
+    </div>
+  </div>
+
+  <div id="main-content">
+    <h2 id="view-title">All Tracks</h2>
+    <div id="loading">Connecting to Google Drive and scanning folders...</div>
+    <div id="playlist"></div>
+  </div>
+
+  <div id="bottom-dock">
+    <div id="player-container">
+      <h3 id="now-playing">Select a song</h3>
+      <audio id="audio-player" controls></audio>
+    </div>
+
+    <footer>
+      <figcaption>
+        Copyright &copy; <span id="year"></span> AllensTechChannel. All rights reserved. 
+        <a href="mailto:tunewarden@gmail.com" target="_blank" rel="noopener noreferrer">Contact Me!</a>
+      </figcaption>
+    </footer>
+  </div>
+
+  <script>
+    // ⚠️ CRITICAL: Paste your Google Apps Script Web App URL between the quotes below!
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzadziBRFAFfKVZ641fat5aM2lNAyxyI6BLmaL3ifVcBpuhbwTmht_ND7lSI7dWRDsNUg/exec";
+
+    let allTracks = []; // Master structural file dataset
+
+    window.onload = function() {
+      // Set the copyright year automatically on load
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      // Flexible check to see if URL is empty or still a placeholder
+      if (WEB_APP_URL === "" || WEB_APP_URL.includes("PASTE_YOUR_DEPLOYED")) {
+        document.getElementById('loading').innerText = "Error: You forgot to paste your Web App URL into the HTML file!";
+        return;
+      }
+
+      // Fetch the data from your Google Web App across the internet
+      fetch(WEB_APP_URL)
+        .then(response => response.json())
+        .then(tracks => {
+          allTracks = tracks;
+          buildSidebarNavigation(tracks);
+          renderPlaylist(tracks);
+        })
+        .catch(error => {
+          console.error("Error fetching music:", error);
+          document.getElementById('loading').innerText = "Failed to load music. Check browser console for errors.";
+        });
+    };
+
+    // Parse the data engine into multi-tiered navigation elements
+    function buildSidebarNavigation(tracks) {
+      const treeDiv = document.getElementById('sidebar-tree');
+      const structure = {};
+
+      tracks.forEach(track => {
+        if (!structure[track.artist]) {
+          structure[track.artist] = new Set();
+        }
+        structure[track.artist].add(track.album);
+      });
+
+      for (const artist in structure) {
+        const artistItem = document.createElement('div');
+        artistItem.className = 'menu-item';
+        artistItem.innerText = artist;
+        artistItem.onclick = (e) => {
+          e.stopPropagation();
+          highlightMenuItem(artistItem);
+          filterView('artist', artist);
+        };
+        treeDiv.appendChild(artistItem);
+
+        structure[artist].forEach(album => {
+          const albumItem = document.createElement('div');
+          albumItem.className = 'menu-item sub-item';
+          albumItem.innerText = album;
+          albumItem.onclick = (e) => {
+            e.stopPropagation();
+            highlightMenuItem(albumItem);
+            filterView('album', album);
+          };
+          treeDiv.appendChild(albumItem);
+        });
+      }
+    }
+
+    function highlightMenuItem(selectedElement) {
+      document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+      selectedElement.classList.add('active');
+    }
+
+    // Interactive filter processing engine
+    function filterView(type, value) {
+      let filtered = [];
+      const titleElement = document.getElementById('view-title');
+
+      if (type === 'all') {
+        filtered = allTracks;
+        titleElement.innerText = "All Tracks";
+        highlightMenuItem(document.getElementById('btn-all-music'));
+      } else if (type === 'artist') {
+        filtered = allTracks.filter(t => t.artist === value);
+        titleElement.innerText = value;
+      } else if (type === 'album') {
+        filtered = allTracks.filter(t => t.album === value);
+        titleElement.innerText = value;
+      }
+
+      renderPlaylist(filtered);
+    }
+
+    function renderPlaylist(tracks) {
+      document.getElementById('loading').style.display = 'none';
+      const playlistDiv = document.getElementById('playlist');
+      playlistDiv.innerHTML = ""; 
+      
+      if (!tracks || tracks.length === 0) {
+        playlistDiv.innerHTML = "<div style='color: var(--caption-color)'>No tracks found in this category.</div>";
+        return;
+      }
+
+      tracks.forEach(track => {
+        const div = document.createElement('div');
+        div.className = 'track';
+        div.innerHTML = `
+          <div>
+            <strong>${track.title}</strong><br>
+            <small style="color: var(--caption-color)">${track.artist} — ${track.album}</small>
+          </div>
+          <button onclick="playSong('${track.url}', '${track.title}', '${track.artist}')">Play</button>
+        `;
+        playlistDiv.appendChild(div);
+      });
+    }
+
+    function playSong(url, title, artist) {
+      const player = document.getElementById('audio-player');
+      document.getElementById('now-playing').innerText = `Now Playing:
