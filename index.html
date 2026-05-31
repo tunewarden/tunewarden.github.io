@@ -338,14 +338,30 @@
       });
     }
 
-    function playSong(url, title, artist) {
+   function playSong(url, title, artist) {
       const player = document.getElementById('audio-player');
-      document.getElementById('now-playing').innerText = `Now Playing: ${title} by ${artist}`;
+      const titleDisplay = document.getElementById('now-playing');
       
-      player.src = url;
-      player.play().catch(error => {
-        console.error("Playback execution error controlled:", error);
-      });
+      titleDisplay.innerText = `Loading Track: ${title}...`;
+      
+      // Use the clean redirect bypass link for Google Web Apps
+      const cleanUrl = url.replace("script.google.com/macros/s/", "script.googleusercontent.com/macros/echo/s/");
+
+      // Fetch the raw Base64 text stream from your script data block
+      fetch(cleanUrl)
+        .then(response => response.text())
+        .then(base64String => {
+          titleDisplay.innerText = `Now Playing: ${title} by ${artist}`;
+          
+          // Convert the text string into an immediate playable browser data URI
+          player.src = "data:audio/mp3;base64," + base64String;
+          player.play();
+        })
+        .catch(error => {
+          console.error("Secure stream playback error:", error);
+          titleDisplay.innerText = "Error loading secure stream pipeline.";
+        });
+    }
     }
   </script>
 </body>
